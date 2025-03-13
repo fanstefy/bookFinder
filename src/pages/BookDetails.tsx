@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { getBookDetails } from "../services/api";
 import { useBookStore } from "../store/bookStore";
+import Spinner from "../components/Spinner";
 
 const BookDetails: React.FC = () => {
   const { id } = useParams<{ id?: string }>();
@@ -21,7 +22,7 @@ const BookDetails: React.FC = () => {
     fetchBook();
   }, [id, addViewedBook]);
 
-  if (!book) return <p>Loading...</p>;
+  if (!book) return <Spinner />;
 
   return (
     <div className="p-6 max-w-2xl mx-auto">
