@@ -1,27 +1,32 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { useBookStore } from "../store/bookStore";
-import Input from "../components/Input";
+import SearchInput from "../components/SearchInput";
+import BookItem from "../components/BookItem";
+
+interface Book {
+  id: string;
+  title: string;
+}
 
 const LandingPage: React.FC = () => {
-  const [books, setBooks] = useState<any[]>([]);
+  const [books, setBooks] = useState<Book[]>([]);
   const { viewedBooks } = useBookStore();
 
   return (
     <div className="p-6 max-w-2xl mx-auto">
-      <Input onSearchResults={setBooks} />
+      <SearchInput onSearchResults={setBooks} />
 
       <div className="mt-4 min-h-[400px]">
-        <h2 className="text-xl font-bold">Search Results</h2>
-        <ul>
-          {books.map((book) => (
-            <li key={book.key}>
-              <Link to={`/book/${book.key.replace("/works/", "")}`}>
-                {book.title}
-              </Link>
-            </li>
+        <h2 className="text-xl font-bold mb-3">Search Results</h2>
+        <ul className="space-y-2">
+          {books.map((book, index) => (
+            <BookItem key={book.id} book={book} index={index} />
           ))}
         </ul>
+        {books.length === 0 && (
+          <p className="text-gray-500 mt-2">No search results.</p>
+        )}
       </div>
 
       {viewedBooks.length > 0 && (
