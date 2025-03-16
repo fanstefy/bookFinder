@@ -22,7 +22,7 @@ Book Finder App is a React + TypeScript project that allows users to search for 
 
 ## 🔧 Installation & Setup
 ### `git clone git@github.com:fanstefy/bookFinder.git`
-cd book-finder
+### `cd book-finder`
 Clone the repository
 ### `npm install`
 Install dependencies
