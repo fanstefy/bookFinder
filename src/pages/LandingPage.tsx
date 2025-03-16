@@ -1,8 +1,9 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import "./LandingPage.css";
 import { useBookStore } from "../store/bookStore";
 import SearchInput from "../components/SearchInput";
 import BookItem from "../components/BookItem";
+import ViewedBooks from "../components/ViewedBooks";
 
 interface Book {
   id: string;
@@ -14,12 +15,17 @@ const LandingPage: React.FC = () => {
   const { viewedBooks } = useBookStore();
 
   return (
-    <div className="p-6 max-w-2xl mx-auto">
-      <SearchInput onSearchResults={setBooks} />
+    <div className="p-6 max-w-[746px] mx-auto">
+      <h1 className="[text-align-last:center] mb-4">
+        FIND THE NEXT BOOK YOU LOVE
+      </h1>
+      <div className="flex justify-center">
+        <SearchInput onSearchResults={setBooks} />
+      </div>
 
-      <div className="mt-4 min-h-[400px]">
+      <div className="w-md mt-4 mb-4 h-[370px]">
         <h2 className="text-xl font-bold mb-3">Search Results</h2>
-        <ul className="space-y-2">
+        <ul className="space-y-2 max-h-[350px] overflow-y-scroll overflow-x-hidden overflow-hidden text-center">
           {books.map((book, index) => (
             <BookItem key={book.id} book={book} index={index} />
           ))}
@@ -29,18 +35,7 @@ const LandingPage: React.FC = () => {
         )}
       </div>
 
-      {viewedBooks.length > 0 && (
-        <div className="mt-4">
-          <h2 className="text-xl font-bold">Viewed Books</h2>
-          <ul>
-            {viewedBooks.map((book) => (
-              <li key={book.id}>
-                <Link to={`/book/${book.id}`}>{book.title}</Link>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
+      {viewedBooks.length > 0 && <ViewedBooks books={viewedBooks} />}
     </div>
   );
 };
