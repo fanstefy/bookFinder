@@ -16,12 +16,6 @@ const SearchInput: React.FC<InputProps> = ({ onSearchResults }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
-    if (inputRef.current) {
-      inputRef.current.focus();
-    }
-  }, []);
-
   const debouncedSearch = useCallback(
     debounce((query: string) => {
       setSearchTerm(query);
@@ -29,15 +23,21 @@ const SearchInput: React.FC<InputProps> = ({ onSearchResults }) => {
     []
   );
 
-  const { data: books } = useQuery({
+  const { data: books, isLoading } = useQuery({
     queryKey: ["searchBooks", searchTerm],
     queryFn: () => searchBooks(searchTerm),
     enabled: !!searchTerm.trim(),
   });
 
   useEffect(() => {
-    if (books) {
-      onSearchResults(books);
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!isLoading) {
+      onSearchResults(books || []);
     }
   }, [books, onSearchResults]);
 

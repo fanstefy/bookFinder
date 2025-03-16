@@ -1,9 +1,10 @@
-import React, { useState } from "react";
 import "./LandingPage.css";
+import { useState } from "react";
 import { useBookStore } from "../store/bookStore";
 import SearchInput from "../components/SearchInput";
 import BookItem from "../components/BookItem";
 import ViewedBooks from "../components/ViewedBooks";
+import Navbar from "../components/Navbar";
 
 interface Book {
   id: string;
@@ -15,8 +16,9 @@ const LandingPage: React.FC = () => {
   const { viewedBooks } = useBookStore();
 
   return (
-    <div className="p-6 max-w-[746px] mx-auto">
-      <h1 className="[text-align-last:center] mb-4">
+    <div className="p-2 max-w-[746px] mx-auto">
+      <Navbar />
+      <h1 className="[text-align-last:center] mb-4 mt-12">
         FIND THE NEXT BOOK YOU LOVE
       </h1>
       <div className="flex justify-center">
@@ -24,14 +26,16 @@ const LandingPage: React.FC = () => {
       </div>
 
       <div className="w-md mt-4 mb-4 h-[370px]">
-        <h2 className="text-xl font-bold mb-3">Search Results</h2>
+        <h2 className="text-xl font-bold mb-3 text-center text-gray-700">
+          Search Results
+        </h2>
         <ul className="space-y-2 max-h-[350px] overflow-y-scroll overflow-x-hidden overflow-hidden text-center">
           {books.map((book, index) => (
             <BookItem key={book.id} book={book} index={index} />
           ))}
         </ul>
         {books.length === 0 && (
-          <p className="text-gray-500 mt-2">No search results.</p>
+          <p className="text-gray-500 mt-2 text-center">No search results.</p>
         )}
       </div>
 
