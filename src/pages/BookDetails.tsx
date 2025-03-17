@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
+import { useEffect } from "react";
 import {
   getBookDetails,
   getAuthorDetails,
@@ -8,57 +8,61 @@ import {
 } from "../services/api";
 import { useBookStore } from "../store/bookStore";
 import Spinner from "../components/Spinner";
-
-const truncateText = (text: string, maxLength: number) =>
-  text?.length > maxLength ? text.slice(0, maxLength) + "..." : text;
+import { truncateText } from "../utils/utils";
 
 const BookDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const { addViewedBook } = useBookStore();
 
-  const { data: book, isLoading } = useQuery({
+  // fetch book details
+  const { data: book, isLoading: bookLoading } = useQuery({
     queryKey: ["bookDetails", id],
-    queryFn: () => getBookDetails(id || ""),
+    queryFn: () => getBookDetails(id ?? ""),
     enabled: !!id,
   });
 
-  const [authorNames, setAuthorNames] = useState<string[]>([]);
-  const [publisher, setPublisher] = useState<string>("Unknown");
-  const [isbn, setIsbn] = useState<string>("N/A");
-  const [imageLoaded, setImageLoaded] = useState(false);
-  const [dataLoaded, setDataLoaded] = useState(false);
-  const [bookCover, setBookCover] = useState<string | null>(null);
+  // fetch author details 
+  const { data: authorNames = [], isLoading: authorsLoading } = useQuery({
+    queryKey: ["authorDetails", JSON.stringify(book?.authors)],
+    queryFn: async () => {
+      if (!book?.authors) return [];
+      const authorPromises = book.authors.map(async (authorObj: any) => {
+        const authorId = authorObj.author.key.split("/").pop();
+        return authorId ? (await getAuthorDetails(authorId)).name : "Unknown";
+      });
+      return Promise.all(authorPromises);
+    },
+    enabled: !!book?.authors?.length,
+  });
 
-  useEffect(() => {
-    const fetchAuthors = async () => {
-      if (book?.authors) {
-        const authorPromises = book.authors.map(async (authorObj: any) => {
-          const authorId = authorObj.author.key.split("/").pop();
-          if (authorId) {
-            const authorData = await getAuthorDetails(authorId);
-            return authorData.name;
-          }
-          return "Unknown";
-        });
-        const authorResults = await Promise.all(authorPromises);
-        setAuthorNames(authorResults);
-      }
-    };
+  // fetch book editions
+  const { data: editionsData, isLoading: editionsLoading } = useQuery({
+    queryKey: ["bookEditions", id],
+    queryFn: () => getBookEditions(id ?? ""),
+    enabled: !!id,
+  });
 
-    const fetchEditions = async () => {
-      if (id) {
-        const editionsData = await getBookEditions(id);
-        if (editionsData?.entries?.length > 0) {
-          setPublisher(editionsData.entries[0]?.publishers?.[0] || "Unknown");
-          setIsbn(editionsData.entries[0]?.isbn_13?.[0] || "N/A");
-        }
-      }
-      setDataLoaded(true);
-    };
+  const publisher = editionsData?.entries?.[0]?.publishers?.[0] || "Unknown";
+  const isbn = editionsData?.entries?.[0]?.isbn_13?.[0] || "N/A";
 
-    fetchAuthors();
-    fetchEditions();
-  }, [book, id]);
+  const bookCoverUrl = book?.covers?.[0]
+    ? `https://covers.openlibrary.org/b/id/${book.covers[0]}-M.jpg`
+    : null;
+
+  // check if the book cover image exists
+  const { data: bookCover, isLoading: coverLoading } = useQuery({
+    queryKey: bookCoverUrl ? ["bookCover", bookCoverUrl] : ["bookCover", "none"],
+    queryFn: async () => {
+      if (!bookCoverUrl) return null;
+      return new Promise<string | null>((resolve) => {
+        const img = new Image();
+        img.src = bookCoverUrl;
+        img.onload = () => resolve(bookCoverUrl);
+        img.onerror = () => resolve(null);
+      });
+    },
+    enabled: !!bookCoverUrl,
+  });
 
   useEffect(() => {
     if (book && id) {
@@ -70,21 +74,8 @@ const BookDetails: React.FC = () => {
     }
   }, [book, id, addViewedBook]);
 
-  useEffect(() => {
-    if (book?.covers?.length) {
-      const img = new Image();
-      img.src = `https://covers.openlibrary.org/b/id/${book.covers[0]}-L.jpg`;
-      img.onload = () => {
-        setBookCover(img.src);
-        setImageLoaded(true);
-      };
-      img.onerror = () => setImageLoaded(true);
-    } else {
-      setImageLoaded(true);
-    }
-  }, [book]);
-
-  if (isLoading || !dataLoaded || !bookCover) return <Spinner />;
+  if (bookLoading || authorsLoading || editionsLoading || coverLoading)
+    return <Spinner />;
 
   return (
     <div className="p-6 max-w-4xl mx-auto bg-white shadow-lg rounded-lg flex flex-col md:flex-row items-center md:items-start gap-6 mt-10">
